@@ -1,0 +1,60 @@
+﻿@page "/tasks/add"
+@page "/tasks/{Id:int}"
+
+@inject IDateService data
+@inject NavigationManager navigate
+
+<EditForm Model="TaskItem" FormName="TaskForm" OnValidSubmit="ValidSubmit">
+    <DataAnnotationsValidator/>
+    <InputNumber @bind-Value ="TaskItem.Id" hidden/>
+    <div class="form-group d-flex justify-content-between m-2">
+        <label class="col-form-label col-3">Заголовок</label>
+        <InputText @bind-Value="TaskItem.Title" Class="form-control"/>
+        <ValidationMessage For="() => TaskItem.Title"/>
+    </div>
+    <div class="form-group d-flex justify-content-between m-2">
+        <label class="col-form-label col-3">Описание</label>
+        <InputText @bind-Value="TaskItem.Description" Class="form-control"/>
+        <ValidationMessage For="() => TaskItem.Description"/>
+    </div>
+        <div class="form-group d-flex justify-content-between m-2">
+        <label class="col-form-label col-3">Дата окончания</label>
+        <InputDate @bind-Value="TaskItem.FinishDate" Class="form-control"/>
+        <ValidationMessage For="() => TaskItem.FinishDate"/>
+    </div>
+    <div class="btn-group">
+        <button class="btn btn-primary m-2" type="submit">Сохранить</button>
+        <a class="btn btn-primary m-2" href="/">Отмена</a>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    [SupplyParameterFromForm]
+    TaskItem? TaskItem { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if (TaskItem == null)
+        {
+            TaskItem = new();
+            if (Id != 0)
+            {
+                var src = await data.GetTaskAsync(Id);
+                TaskItem.Id = src.Id;
+                TaskItem.Title = src.Title;
+                TaskItem.Description = src.Description;
+                TaskItem.CreatedDate = src.CreatedDate;
+                TaskItem.FinishDate = src.FinishDate;
+            }
+        }
+    }
+
+    async Task ValidSubmit()
+    {
+        await data.SaveAsync(TaskItem!);
+        navigate.NavigateTo("/");
+    }
+}
